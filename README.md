@@ -9,11 +9,15 @@ A Classic WoW addon that automates raid invitations. Import sign-up data from [r
 - **Auto-invite** - Monitors guild chat and whispers for `+` messages
 - **Open invite mode** - Switch from registered-only to open invites at any time
 - **Alt name support** - Names with `/` or `|` (e.g., "Thespirit/Torinas") match any alt
-- **Auto-responses** - Unregistered players and full-raid requests get a polite whisper reply
+- **Class verification** - Checks guild roster to prevent wrong-alt invites; optional post-join verification for non-guild members
+- **Auto-responses** - Unregistered players, overflow sign-ups, and full-raid requests each get a distinct whisper reply
+- **Spec name cleanup** - Strips raid-helper suffixes (e.g., "Holy1" displays as "Holy")
 - **Live roster UI** - Color-coded status tracking with scrollable player list
 - **Raid sync** - Detects players joining, leaving, or being invited by assistants
+- **Auto party-to-raid conversion** - Start solo, first `+` invite creates a party, auto-converts to raid when they join
 - **Persistence** - State survives `/reload` via SavedVariables
-- **In-game help** - Click the `?` button for a quick usage guide
+- **In-game help** - Click the **?** button for a quick usage guide
+- **Configurable settings** - Click the **Config** button to toggle options like post-join class checks
 
 ## Installation
 
@@ -31,18 +35,21 @@ A Classic WoW addon that automates raid invitations. Import sign-up data from [r
 4. In-game, click **Paste** (or `/rm paste`), paste the contents (`Ctrl+V`), then click **Load**
 
 ### Imported Raid
-3. Form a party with at least one other player
-4. Click **Start** to begin invite mode (announces in guild chat), or **Quiet** for no announcement
-5. Registered players type `+` in guild chat or whisper to receive an invite
-6. Click **Open** to allow anyone to join once the registered roster is filled
-7. Click **Stop** when done
+
+1. After loading JSON, click **Start** (announces in guild chat) or **Quiet** (no announcement)
+2. Registered players type `+` in guild chat or whisper to receive an invite
+3. Click **Open** to allow anyone to join once the registered roster is filled
+4. Click **Stop** when done
+
+You can start invite mode even while solo — the addon will auto-convert to a raid once the first person joins your party.
 
 ### Custom Raid
 
-1. Click **Create** (or `/rm create <name> [max]`), enter a raid name and optional max players
-2. The raid enters open invite mode immediately — anyone typing `+` gets invited
-3. Existing raid members are automatically added to the roster
-4. Click **Stop** when done
+1. Click **Create** (or `/rm create <name> [max]`), enter a raid name and optional max players (defaults to 40 if left blank)
+2. Click **Start**, **Quiet**, or **Open** to begin inviting
+3. Anyone typing `+` in guild chat or whisper gets invited and added to the roster
+4. Existing raid members are automatically added to the roster
+5. Click **Stop** when done
 
 ### Commands
 
@@ -72,16 +79,24 @@ The title bar shows the raid name and max player limit. The status bar shows cou
 
 Buttons: **Paste** | **Create** | **Start** | **Quiet** | **Open** | **Stop** | **Reset**
 
-Click the **?** button next to the close button for an in-game help guide.
+- Click the **?** button (top right) for an in-game help guide
+- Click the **Config** button (top left) to toggle settings
+
+### Settings
+
+Access settings via the **Config** button on the main window:
+
+- **Verify class after joining (non-guild)** - When enabled, warns the raid leader and whispers the player if someone joins the raid on a different class than they signed up as. Useful for catching wrong-alt joins that can't be verified via the guild roster before inviting.
 
 ## How It Works
 
-- **Sign-up filtering**: Entries marked as "Absence" are excluded. All other sign-ups (including "Tentative") are registered.
-- **Invite eligibility**: For imported raids, only the first 40 sign-ups by position are auto-invited. Players beyond position 40 get a whisper explaining that only the first 40 get auto-invites but there may be space if people don't show up. Unregistered players get a separate message letting them know to be patient. In open mode or custom raids, anyone is eligible.
+- **Sign-up filtering**: Entries marked as "Absence" are excluded. All other sign-ups (including "Tentative") are registered. Spec names are cleaned up (e.g., "Holy1" becomes "Holy").
+- **Invite eligibility**: For imported raids, only the first 40 sign-ups by position are auto-invited. Players beyond position 40 get a whisper explaining that only the first 40 get auto-invites but there may be space if people don't show up. Unregistered players get a separate message letting them know to be patient. Custom raids always use open mode — anyone is eligible.
+- **Class verification**: When a registered player sends `+`, their class is checked against the guild roster. If they're on the wrong character, they receive a whisper asking them to switch. For non-guild members, an optional post-join check can be enabled in settings.
 - **Name matching**: Names containing `/` or `|` are split so any alt name triggers a match. All matching is case-insensitive.
 - **Decline recovery**: If a player declines and types `+` again, they will be re-invited.
 - **Raid full**: When the raid hits the max player limit, new `+` requests receive a whisper that the raid is full.
-- **Raid conversion**: If you're in a party when starting invite mode, the addon automatically converts to a raid.
+- **Auto party-to-raid conversion**: You can start invite mode while solo. The first `+` invite creates a party, and the addon automatically converts to a raid when they join.
 - **Raid sync**: Players invited by assistants or already in the raid are automatically detected and added to the roster. In custom raids, players who leave are removed from the roster.
 - **Class detection**: For players joining via open invite or assistant invite, the addon detects their class from the raid roster API.
 - **Disband detection**: If the raid disbands, invite mode stops automatically and tracking resets.
