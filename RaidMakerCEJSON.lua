@@ -1,5 +1,5 @@
 -- RaidMakerCEJSON.lua
--- Minimal recursive-descent JSON parser for Lua 5.0 (vanilla WoW)
+-- Minimal recursive-descent JSON parser for Lua 5.0 (Classic WoW)
 
 local function skipWhitespace(str, pos)
     while pos <= string.len(str) do

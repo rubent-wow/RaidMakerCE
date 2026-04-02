@@ -4,7 +4,7 @@
 local VISIBLE_ROWS = 20
 local ROW_HEIGHT = 16
 
--- WoW class colors (vanilla)
+-- WoW class colors (Classic)
 local CLASS_COLORS = {
     ["Warrior"]  = { r = 0.78, g = 0.61, b = 0.43 },
     ["Paladin"]  = { r = 0.96, g = 0.55, b = 0.73 },
@@ -190,6 +190,18 @@ function RaidMakerCEUI_ToggleInfoFrame()
     else
         RaidMakerCEInfoFrame:Show()
     end
+end
+
+function RaidMakerCEUI_ToggleSettingsFrame()
+    if RaidMakerCESettingsFrame:IsVisible() then
+        RaidMakerCESettingsFrame:Hide()
+    else
+        RaidMakerCESettingsFrame:Show()
+    end
+end
+
+function RaidMakerCEUI_RefreshSettings()
+    RaidMakerCEPostJoinCheckButton:SetChecked(RaidMakerCE.settings.postJoinClassCheck)
 end
 
 function RaidMakerCEUI_SetInfoText()

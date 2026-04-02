@@ -17,6 +17,9 @@ RaidMakerCE = {
     tentative = {},
     lastInviteName = nil,
     lastInviteTime = 0,
+    settings = {
+        postJoinClassCheck = false,
+    },
 }
 
 -- Color constants for chat output
@@ -61,6 +64,23 @@ local function SplitNames(nameStr)
     return names
 end
 
+-- Look up a player's class from the guild roster
+local function GetGuildMemberClass(playerName)
+    local playerLower = strlower(playerName)
+    -- Check both online and offline counts
+    local totalMembers = GetNumGuildMembers(true) or 0
+    if totalMembers == 0 then
+        totalMembers = GetNumGuildMembers() or 0
+    end
+    for i = 1, totalMembers do
+        local name, _, _, _, class = GetGuildRosterInfo(i)
+        if name and strlower(name) == playerLower then
+            return class
+        end
+    end
+    return nil
+end
+
 -- Simple table sort by position field
 local function SortByPosition(a, b)
     return (a.position or 9999) < (b.position or 9999)
@@ -90,10 +110,14 @@ function RaidMakerCE_LoadJSON(jsonString)
         end
     end
 
-    -- Filter out Absence entries
+    -- Filter out Absence entries and clean up spec names
     local eligible = {}
     for _, signup in ipairs(data.signUps) do
         if signup.className ~= "Absence" then
+            -- Strip trailing "1" from spec names (e.g., Holy1 -> Holy, Protection1 -> Protection)
+            if signup.specName then
+                signup.specName = string.gsub(signup.specName, "1$", "")
+            end
             table.insert(eligible, signup)
         end
     end
@@ -162,6 +186,7 @@ function RaidMakerCE_SaveState()
         raidTime = RaidMakerCE.raidTime,
         maxPlayers = RaidMakerCE.maxPlayers,
         isCustom = RaidMakerCE.isCustom,
+        settings = RaidMakerCE.settings,
         invited = RaidMakerCE.invited,
         inRaid = RaidMakerCE.inRaid,
         declined = RaidMakerCE.declined,
@@ -180,6 +205,9 @@ function RaidMakerCE_RestoreState()
     RaidMakerCE.raidTime = RaidMakerCEDB.raidTime or ""
     RaidMakerCE.maxPlayers = RaidMakerCEDB.maxPlayers or 40
     RaidMakerCE.isCustom = RaidMakerCEDB.isCustom or false
+    if RaidMakerCEDB.settings then
+        RaidMakerCE.settings.postJoinClassCheck = RaidMakerCEDB.settings.postJoinClassCheck or false
+    end
     RaidMakerCE.invited = RaidMakerCEDB.invited or {}
     RaidMakerCE.inRaid = RaidMakerCEDB.inRaid or {}
     RaidMakerCE.declined = RaidMakerCEDB.declined or {}
@@ -231,13 +259,21 @@ function RaidMakerCE_StartInviteMode(quiet)
         return
     end
 
+    -- Refresh guild roster for class verification
+    if GuildRoster then GuildRoster() end
+
     -- Convert to raid if in party
     if GetNumRaidMembers() == 0 and GetNumPartyMembers() > 0 then
         ConvertToRaid()
         Print("Converted party to raid.")
     end
 
-    RaidMakerCE.state = "inviting"
+    -- Custom raids go straight to open mode (no registration check)
+    if RaidMakerCE.isCustom then
+        RaidMakerCE.state = "open"
+    else
+        RaidMakerCE.state = "inviting"
+    end
 
     -- Sync existing raid members against the roster
     RaidMakerCE_SyncRaidRoster()
@@ -333,13 +369,13 @@ function RaidMakerCE_CreateRaid(title, maxPlayers)
     RaidMakerCE.tentative = {}
     RaidMakerCE.lastInviteName = nil
     RaidMakerCE.lastInviteTime = 0
-    RaidMakerCE.state = "open"
+    RaidMakerCE.state = "loaded"
 
     -- Sync existing raid members into the roster
     RaidMakerCE_SyncRaidRoster()
 
     RaidMakerCE_SaveState()
-    Print(COLOR_GREEN .. "Created custom raid: " .. title .. " (max " .. maxPlayers .. " players). Open invite mode active." .. COLOR_RESET)
+    Print(COLOR_GREEN .. "Created custom raid: " .. title .. " (max " .. maxPlayers .. " players). Use Start, Quiet, or Open to begin inviting." .. COLOR_RESET)
 
     if RaidMakerCEUI_UpdateRoster then
         RaidMakerCEUI_UpdateRoster()
@@ -364,6 +400,24 @@ function RaidMakerCE_OnGuildChat(message, sender)
         elseif not index then
             SendChatMessage("You are not registered for " .. RaidMakerCE.raidTitle .. ", but please be patient. If there is still space you will receive an invite.", "WHISPER", nil, sender)
             return
+        end
+    end
+
+    -- Verify class matches signup (prevents wrong-alt invites)
+    if index then
+        local signup = RaidMakerCE.signups[index]
+        local expectedClass = RaidMakerCE_GetDisplayClass(signup)
+        if expectedClass and expectedClass ~= "Unknown" and expectedClass ~= "Tank" and expectedClass ~= "Tentative" then
+            local actualClass = GetGuildMemberClass(sender)
+            if actualClass then
+                if strlower(actualClass) ~= strlower(expectedClass) then
+                    SendChatMessage("You are signed up as " .. expectedClass .. " for " .. RaidMakerCE.raidTitle .. ", but you are on a " .. actualClass .. ". Please log onto the correct character.", "WHISPER", nil, sender)
+                    Print(COLOR_ORANGE .. sender .. " (" .. actualClass .. ") tried to join but is signed up as " .. expectedClass .. "." .. COLOR_RESET)
+                    return
+                end
+            else
+                Print(COLOR_YELLOW .. "Could not verify class for " .. sender .. " (expected " .. expectedClass .. "). Inviting anyway." .. COLOR_RESET)
+            end
         end
     end
 
@@ -409,8 +463,10 @@ function RaidMakerCE_OnGuildChat(message, sender)
 
     local signup = RaidMakerCE.signups[index]
     local displayClass = RaidMakerCE_GetDisplayClass(signup)
-    Print(COLOR_GREEN .. "Invited " .. sender .. COLOR_RESET ..
-        " (" .. (displayClass or "?") .. " - " .. (signup.specName or "?") .. ")")
+    local actualClass = GetGuildMemberClass(sender) or "unknown"
+    Print(COLOR_GREEN .. "Invited " .. sender .. " with class " .. actualClass ..
+        " that matched position " .. (signup.position or index) .. " in sign up" ..
+        " (registered as " .. (displayClass or "?") .. "/" .. (signup.specName or "?") .. ")" .. COLOR_RESET)
 
     if RaidMakerCEUI_UpdateRoster then
         RaidMakerCEUI_UpdateRoster()
@@ -531,6 +587,20 @@ function RaidMakerCE_SyncRaidRoster()
                 local signup = RaidMakerCE.signups[index]
                 if signup and signup.className == "Unknown" then
                     signup.className = class
+                end
+            end
+
+            -- Post-join class check for new raid members
+            if RaidMakerCE.settings.postJoinClassCheck and not RaidMakerCE.inRaid[nameLower] then
+                if class and class ~= "" and index then
+                    local signup = RaidMakerCE.signups[index]
+                    local expectedClass = RaidMakerCE_GetDisplayClass(signup)
+                    if expectedClass and expectedClass ~= "Unknown" and expectedClass ~= "Tank" and expectedClass ~= "Tentative" then
+                        if strlower(class) ~= strlower(expectedClass) then
+                            Print(COLOR_RED .. "WARNING: " .. name .. " joined as " .. class .. " but is signed up as " .. expectedClass .. "!" .. COLOR_RESET)
+                            SendChatMessage("Notice: You joined " .. RaidMakerCE.raidTitle .. " as " .. class .. ", but you signed up as " .. expectedClass .. ". Please let the raid leader know if this is intentional.", "WHISPER", nil, name)
+                        end
+                    end
                 end
             end
         end
@@ -737,6 +807,9 @@ SlashCmdList["RAIDMAKER"] = SlashHandler
 function RaidMakerCE_OnEvent()
     if event == "ADDON_LOADED" and arg1 == "RaidMakerCE" then
         RaidMakerCE_RestoreState()
+        -- Request guild roster so class lookups work
+        if GuildRoster then GuildRoster() end
+        if SetGuildRosterShowOffline then SetGuildRosterShowOffline(true) end
         if RaidMakerCE.state ~= "idle" then
             Print("Restored raid data for " .. RaidMakerCE.raidTitle .. ". State: " .. RaidMakerCE.state)
         end

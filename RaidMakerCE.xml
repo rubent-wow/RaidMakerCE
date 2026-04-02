@@ -250,6 +250,24 @@
           </OnClick>
         </Scripts>
       </Button>
+      <!-- Settings button -->
+      <Button name="RaidMakerCESettingsButton" inherits="UIPanelButtonTemplate" text="Config">
+        <Size>
+          <AbsDimension x="50" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="RaidMakerCEMainFrame">
+            <Offset>
+              <AbsDimension x="14" y="-10"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCEUI_ToggleSettingsFrame();
+          </OnClick>
+        </Scripts>
+      </Button>
       <!-- Scroll frame for roster -->
       <ScrollFrame name="RaidMakerCEScrollFrame" inherits="FauxScrollFrameTemplate">
         <Size>
@@ -862,6 +880,117 @@
       </OnMouseUp>
       <OnShow>
         RaidMakerCEUI_SetInfoText();
+      </OnShow>
+    </Scripts>
+  </Frame>
+
+  <!-- Settings frame -->
+  <Frame name="RaidMakerCESettingsFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent" frameStrata="DIALOG">
+    <Size>
+      <AbsDimension x="300" y="120"/>
+    </Size>
+    <Anchors>
+      <Anchor point="CENTER">
+        <Offset>
+          <AbsDimension x="-200" y="0"/>
+        </Offset>
+      </Anchor>
+    </Anchors>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="RaidMakerCESettingsFrameTitle" inherits="GameFontNormal" text="RaidMakerCE - Settings">
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="-16"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="RaidMakerCESettingsFrameCloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Button>
+      <CheckButton name="RaidMakerCEPostJoinCheckButton" inherits="UICheckButtonTemplate" enableMouse="true">
+        <Size>
+          <AbsDimension x="26" y="26"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="18" y="-40"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE.settings.postJoinClassCheck = (this:GetChecked() == 1);
+            RaidMakerCE_SaveState();
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <Frame>
+        <Size>
+          <AbsDimension x="240" y="40"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="46" y="-40"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" text="Verify class after joining (non-guild)" justifyH="LEFT">
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+              </Anchors>
+            </FontString>
+            <FontString inherits="GameFontNormalSmall" text="Warns if a player joins on the wrong class" justifyH="LEFT">
+              <Anchors>
+                <Anchor point="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="0" y="-14"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+              <Color r="0.5" g="0.5" b="0.5"/>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
+    </Frames>
+    <Scripts>
+      <OnMouseDown>
+        if arg1 == "LeftButton" then
+          this:StartMoving();
+        end
+      </OnMouseDown>
+      <OnMouseUp>
+        this:StopMovingOrSizing();
+      </OnMouseUp>
+      <OnShow>
+        RaidMakerCEUI_RefreshSettings();
       </OnShow>
     </Scripts>
   </Frame>

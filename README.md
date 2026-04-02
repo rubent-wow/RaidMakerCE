@@ -1,6 +1,6 @@
 # RaidMakerCE
 
-A Turtle WoW addon that automates raid invitations. Import sign-up data from [raid-helper.xyz](https://raid-helper.xyz) or create a custom raid on the fly. Players type `+` in guild chat or whisper to receive an automatic invite.
+A Classic WoW addon that automates raid invitations. Import sign-up data from [raid-helper.xyz](https://raid-helper.xyz) or create a custom raid on the fly. Players type `+` in guild chat or whisper to receive an automatic invite.
 
 ## Features
 
@@ -88,7 +88,7 @@ Click the **?** button next to the close button for an in-game help guide.
 
 ## Requirements
 
-- Turtle WoW client (1.12.x vanilla interface)
+- Classic WoW client (1.12.x interface)
 - Raid leader or assist privileges to send invites
 
 ## File Structure
