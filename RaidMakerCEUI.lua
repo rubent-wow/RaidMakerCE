@@ -213,16 +213,17 @@ function RaidMakerCEUI_SetInfoText()
         "4. In-game: click Paste, Ctrl+V, click Load\n" ..
         "\n" ..
         "|cff00ffffImported Raid:|r\n" ..
-        "1. Form a party with one person\n" ..
-        "2. Click Start (guild announce) or Quiet\n" ..
-        "3. Players type + in guild chat or whisper\n" ..
-        "4. Click Open to allow anyone to join\n" ..
-        "5. Click Stop when done\n" ..
+        "1. Click Start (guild announce) or Quiet\n" ..
+        "2. Players type + in guild chat or whisper\n" ..
+        "3. Click Open to allow anyone to join\n" ..
+        "4. Click Stop when done\n" ..
+        "(Auto-converts to raid when first person joins)\n" ..
         "\n" ..
         "|cff00ffffCustom Raid:|r\n" ..
         "1. Click Create, enter name and max size\n" ..
-        "2. Anyone typing + gets invited\n" ..
-        "3. Click Stop when done\n" ..
+        "2. Click Start, Quiet, or Open to begin\n" ..
+        "3. Anyone typing + gets invited\n" ..
+        "4. Click Stop when done\n" ..
         "\n" ..
         "|cff00ffffSlash Commands:|r\n" ..
         "/rm - Toggle this window\n" ..
