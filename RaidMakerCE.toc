@@ -1,0 +1,11 @@
+## Interface: 11200
+## Title: RaidMakerCE
+## Notes: Raid invitation manager using raid-helper.xyz sign-up data
+## Author: Rubent
+## Version: 1.0.0
+## SavedVariables: RaidMakerCEDB
+
+RaidMakerCEJSON.lua
+RaidMakerCE.lua
+RaidMakerCEUI.lua
+RaidMakerCE.xml

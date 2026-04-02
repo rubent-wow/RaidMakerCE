@@ -1,0 +1,869 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+
+  <!-- Event frame (shown but invisible, needs OnUpdate) -->
+  <Frame name="RaidMakerCEEventFrame" hidden="false">
+    <Scripts>
+      <OnLoad>
+        this:RegisterEvent("ADDON_LOADED");
+        this:RegisterEvent("CHAT_MSG_GUILD");
+        this:RegisterEvent("CHAT_MSG_WHISPER");
+        this:RegisterEvent("RAID_ROSTER_UPDATE");
+        this:RegisterEvent("PARTY_MEMBERS_CHANGED");
+        this:RegisterEvent("CHAT_MSG_SYSTEM");
+      </OnLoad>
+      <OnEvent>
+        RaidMakerCE_OnEvent();
+      </OnEvent>
+      <OnUpdate>
+        RaidMakerCE_OnUpdate();
+      </OnUpdate>
+    </Scripts>
+  </Frame>
+
+  <!-- Roster row template -->
+  <Button name="RaidMakerCERosterRowTemplate" virtual="true">
+    <Size>
+      <AbsDimension x="380" y="16"/>
+    </Size>
+    <Layers>
+      <Layer level="BACKGROUND">
+        <Texture name="$parentHighlight" setAllPoints="true" hidden="true">
+          <Color r="1" g="1" b="1" a="0.1"/>
+        </Texture>
+      </Layer>
+      <Layer level="ARTWORK">
+        <FontString name="$parentNumber" inherits="GameFontNormalSmall" justifyH="RIGHT">
+          <Size>
+            <AbsDimension x="24" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentName" inherits="GameFontNormalSmall" justifyH="LEFT">
+          <Size>
+            <AbsDimension x="120" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parentNumber" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentClass" inherits="GameFontNormalSmall" justifyH="LEFT">
+          <Size>
+            <AbsDimension x="80" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentRole" inherits="GameFontNormalSmall" justifyH="LEFT">
+          <Size>
+            <AbsDimension x="60" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parentClass" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentStatus" inherits="GameFontNormalSmall" justifyH="CENTER">
+          <Size>
+            <AbsDimension x="70" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parentRole" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Scripts>
+      <OnEnter>
+        getglobal(this:GetName().."Highlight"):Show();
+      </OnEnter>
+      <OnLeave>
+        getglobal(this:GetName().."Highlight"):Hide();
+      </OnLeave>
+    </Scripts>
+  </Button>
+
+  <!-- Main frame -->
+  <Frame name="RaidMakerCEMainFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent">
+    <Size>
+      <AbsDimension x="420" y="460"/>
+    </Size>
+    <Anchors>
+      <Anchor point="CENTER"/>
+    </Anchors>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="RaidMakerCEMainFrameTitle" inherits="GameFontNormal" text="RaidMakerCE">
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="-16"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="RaidMakerCEMainFrameSubtitle" inherits="GameFontNormalSmall" text="">
+          <Anchors>
+            <Anchor point="TOP" relativeTo="RaidMakerCEMainFrameTitle" relativePoint="BOTTOM">
+              <Offset>
+                <AbsDimension x="0" y="-2"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <!-- Column headers -->
+        <FontString name="RaidMakerCEHeaderNum" inherits="GameFontNormalSmall" text="#">
+          <Size>
+            <AbsDimension x="24" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="RaidMakerCEMainFrame">
+              <Offset>
+                <AbsDimension x="18" y="-48"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="0.8" g="0.8" b="0"/>
+        </FontString>
+        <FontString name="RaidMakerCEHeaderName" inherits="GameFontNormalSmall" text="Name">
+          <Size>
+            <AbsDimension x="120" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="RaidMakerCEHeaderNum" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="0.8" g="0.8" b="0"/>
+        </FontString>
+        <FontString name="RaidMakerCEHeaderClass" inherits="GameFontNormalSmall" text="Class">
+          <Size>
+            <AbsDimension x="80" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="RaidMakerCEHeaderName" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="0.8" g="0.8" b="0"/>
+        </FontString>
+        <FontString name="RaidMakerCEHeaderRole" inherits="GameFontNormalSmall" text="Role">
+          <Size>
+            <AbsDimension x="60" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="RaidMakerCEHeaderClass" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="0.8" g="0.8" b="0"/>
+        </FontString>
+        <FontString name="RaidMakerCEHeaderStatus" inherits="GameFontNormalSmall" text="Status" justifyH="CENTER">
+          <Size>
+            <AbsDimension x="70" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="RaidMakerCEHeaderRole" relativePoint="RIGHT">
+              <Offset>
+                <AbsDimension x="4" y="0"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="0.8" g="0.8" b="0"/>
+        </FontString>
+        <!-- Status summary bar -->
+        <FontString name="RaidMakerCEStatusBar" inherits="GameFontNormalSmall" text="">
+          <Anchors>
+            <Anchor point="BOTTOMLEFT" relativeTo="RaidMakerCEMainFrame">
+              <Offset>
+                <AbsDimension x="18" y="46"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <!-- Close button -->
+      <Button name="RaidMakerCEMainFrameCloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Button>
+      <!-- Info button -->
+      <Button name="RaidMakerCEInfoButton" inherits="UIPanelButtonTemplate" text="?">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="RIGHT" relativeTo="RaidMakerCEMainFrameCloseButton" relativePoint="LEFT">
+            <Offset>
+              <AbsDimension x="2" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCEUI_ToggleInfoFrame();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <!-- Scroll frame for roster -->
+      <ScrollFrame name="RaidMakerCEScrollFrame" inherits="FauxScrollFrameTemplate">
+        <Size>
+          <AbsDimension x="384" y="320"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="14" y="-64"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnVerticalScroll>
+            FauxScrollFrame_OnVerticalScroll(16, RaidMakerCEUI_UpdateRoster);
+          </OnVerticalScroll>
+        </Scripts>
+      </ScrollFrame>
+      <!-- Roster rows (20 visible) -->
+      <Button name="RaidMakerCERow1" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCEScrollFrame"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow2" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow1" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow3" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow2" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow4" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow3" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow5" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow4" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow6" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow5" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow7" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow6" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow8" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow7" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow9" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow8" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow10" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow9" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow11" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow10" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow12" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow11" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow13" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow12" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow14" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow13" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow15" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow14" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow16" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow15" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow17" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow16" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow18" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow17" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow19" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow18" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <Button name="RaidMakerCERow20" inherits="RaidMakerCERosterRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="RaidMakerCERow19" relativePoint="BOTTOMLEFT"/></Anchors>
+      </Button>
+      <!-- Buttons row -->
+      <Button name="RaidMakerCEPasteButton" inherits="UIPanelButtonTemplate" text="Paste">
+        <Size>
+          <AbsDimension x="50" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="BOTTOMLEFT" relativeTo="RaidMakerCEMainFrame">
+            <Offset>
+              <AbsDimension x="14" y="14"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCEUI_ShowPasteDialog();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCECreateButton" inherits="UIPanelButtonTemplate" text="Create">
+        <Size>
+          <AbsDimension x="55" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEPasteButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCEUI_ShowCreateDialog();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCEStartButton" inherits="UIPanelButtonTemplate" text="Start">
+        <Size>
+          <AbsDimension x="50" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCECreateButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE_StartInviteMode();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCEStartQuietButton" inherits="UIPanelButtonTemplate" text="Quiet">
+        <Size>
+          <AbsDimension x="55" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEStartButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE_StartInviteMode(true);
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCEOpenButton" inherits="UIPanelButtonTemplate" text="Open">
+        <Size>
+          <AbsDimension x="50" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEStartQuietButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE_OpenInviteMode();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCEStopButton" inherits="UIPanelButtonTemplate" text="Stop">
+        <Size>
+          <AbsDimension x="50" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEOpenButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE_StopInviteMode();
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCEResetButton" inherits="UIPanelButtonTemplate" text="Reset">
+        <Size>
+          <AbsDimension x="55" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEStopButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="4" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCE_Reset();
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnMouseDown>
+        if arg1 == "LeftButton" then
+          this:StartMoving();
+        end
+      </OnMouseDown>
+      <OnMouseUp>
+        this:StopMovingOrSizing();
+      </OnMouseUp>
+      <OnShow>
+        RaidMakerCEUI_UpdateRoster();
+      </OnShow>
+    </Scripts>
+  </Frame>
+
+  <!-- Paste dialog -->
+  <Frame name="RaidMakerCEPasteFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent" frameStrata="DIALOG">
+    <Size>
+      <AbsDimension x="500" y="400"/>
+    </Size>
+    <Anchors>
+      <Anchor point="CENTER"/>
+    </Anchors>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="RaidMakerCEPasteFrameTitle" inherits="GameFontNormal" text="Paste raid-helper.xyz JSON">
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="-16"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="RaidMakerCEPasteFrameCloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Button>
+      <!-- Scrollable edit box -->
+      <ScrollFrame name="RaidMakerCEPasteScrollFrame">
+        <Size>
+          <AbsDimension x="460" y="300"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="18" y="-36"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Frames>
+          <EditBox name="RaidMakerCEPasteEditBox" multiLine="true" autoFocus="true" enableMouse="true">
+            <Size>
+              <AbsDimension x="460" y="300"/>
+            </Size>
+            <FontString inherits="ChatFontNormal"/>
+            <Scripts>
+              <OnTextChanged>
+                local parent = this:GetParent();
+                parent:UpdateScrollChildRect();
+              </OnTextChanged>
+              <OnEscapePressed>
+                this:ClearFocus();
+                RaidMakerCEPasteFrame:Hide();
+              </OnEscapePressed>
+            </Scripts>
+          </EditBox>
+        </Frames>
+        <Scripts>
+          <OnLoad>
+            this:SetScrollChild(RaidMakerCEPasteEditBox);
+          </OnLoad>
+        </Scripts>
+      </ScrollFrame>
+      <!-- Load button -->
+      <Button name="RaidMakerCEPasteLoadButton" inherits="UIPanelButtonTemplate" text="Load">
+        <Size>
+          <AbsDimension x="80" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="BOTTOMRIGHT" relativeTo="RaidMakerCEPasteFrame">
+            <Offset>
+              <AbsDimension x="-100" y="14"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            local text = RaidMakerCEPasteEditBox:GetText();
+            if text and text ~= "" then
+              local success = RaidMakerCE_LoadJSON(text);
+              if success then
+                RaidMakerCEPasteFrame:Hide();
+                RaidMakerCEMainFrame:Show();
+              end
+            end
+          </OnClick>
+        </Scripts>
+      </Button>
+      <!-- Cancel button -->
+      <Button name="RaidMakerCEPasteCancelButton" inherits="UIPanelButtonTemplate" text="Cancel">
+        <Size>
+          <AbsDimension x="80" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCEPasteLoadButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="8" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCEPasteFrame:Hide();
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnMouseDown>
+        if arg1 == "LeftButton" then
+          this:StartMoving();
+        end
+      </OnMouseDown>
+      <OnMouseUp>
+        this:StopMovingOrSizing();
+      </OnMouseUp>
+      <OnShow>
+        RaidMakerCEPasteEditBox:SetText("");
+        RaidMakerCEPasteEditBox:SetMaxLetters(50000);
+        RaidMakerCEPasteEditBox:SetFocus();
+      </OnShow>
+    </Scripts>
+  </Frame>
+
+  <!-- Create raid dialog -->
+  <Frame name="RaidMakerCECreateFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent" frameStrata="DIALOG">
+    <Size>
+      <AbsDimension x="300" y="160"/>
+    </Size>
+    <Anchors>
+      <Anchor point="CENTER"/>
+    </Anchors>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="RaidMakerCECreateFrameTitle" inherits="GameFontNormal" text="Create Custom Raid">
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="-16"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormalSmall" text="Raid Name:">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset>
+                <AbsDimension x="20" y="-40"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormalSmall" text="Max Players:">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset>
+                <AbsDimension x="20" y="-70"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="RaidMakerCECreateFrameCloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Button>
+      <EditBox name="RaidMakerCECreateNameEditBox" autoFocus="false" enableMouse="true">
+        <Size>
+          <AbsDimension x="160" y="20"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="110" y="-38"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\ChatFrame\ChatFrameBackground" edgeFile="Interface\ChatFrame\ChatFrameBackground" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="0" right="0" top="0" bottom="0"/>
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="1"/>
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="1"/>
+          </EdgeSize>
+        </Backdrop>
+        <FontString inherits="ChatFontNormal"/>
+        <Scripts>
+          <OnEnterPressed>
+            RaidMakerCEUI_SubmitCreateDialog();
+          </OnEnterPressed>
+          <OnEscapePressed>
+            this:ClearFocus();
+          </OnEscapePressed>
+          <OnTabPressed>
+            RaidMakerCECreateMaxEditBox:SetFocus();
+          </OnTabPressed>
+        </Scripts>
+      </EditBox>
+      <EditBox name="RaidMakerCECreateMaxEditBox" autoFocus="false" enableMouse="true" numeric="true">
+        <Size>
+          <AbsDimension x="50" y="20"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="110" y="-68"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\ChatFrame\ChatFrameBackground" edgeFile="Interface\ChatFrame\ChatFrameBackground" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="0" right="0" top="0" bottom="0"/>
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="1"/>
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="1"/>
+          </EdgeSize>
+        </Backdrop>
+        <FontString inherits="ChatFontNormal"/>
+        <Scripts>
+          <OnEnterPressed>
+            RaidMakerCEUI_SubmitCreateDialog();
+          </OnEnterPressed>
+          <OnEscapePressed>
+            this:ClearFocus();
+          </OnEscapePressed>
+          <OnTabPressed>
+            RaidMakerCECreateNameEditBox:SetFocus();
+          </OnTabPressed>
+        </Scripts>
+      </EditBox>
+      <Button name="RaidMakerCECreateGoButton" inherits="UIPanelButtonTemplate" text="Create">
+        <Size>
+          <AbsDimension x="80" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="BOTTOMRIGHT" relativeTo="RaidMakerCECreateFrame">
+            <Offset>
+              <AbsDimension x="-100" y="14"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            local raidName = RaidMakerCECreateNameEditBox:GetText();
+            local maxPlayers = RaidMakerCECreateMaxEditBox:GetText();
+            if raidName and raidName ~= "" then
+              RaidMakerCE_CreateRaid(raidName, maxPlayers);
+              RaidMakerCECreateFrame:Hide();
+            end
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="RaidMakerCECreateCancelButton" inherits="UIPanelButtonTemplate" text="Cancel">
+        <Size>
+          <AbsDimension x="80" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="RaidMakerCECreateGoButton" relativePoint="RIGHT">
+            <Offset>
+              <AbsDimension x="8" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            RaidMakerCECreateFrame:Hide();
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnMouseDown>
+        if arg1 == "LeftButton" then
+          this:StartMoving();
+        end
+      </OnMouseDown>
+      <OnMouseUp>
+        this:StopMovingOrSizing();
+      </OnMouseUp>
+      <OnShow>
+        RaidMakerCECreateNameEditBox:SetText("");
+        RaidMakerCECreateMaxEditBox:SetText("");
+        RaidMakerCECreateNameEditBox:SetFocus();
+      </OnShow>
+    </Scripts>
+  </Frame>
+
+  <!-- Info frame -->
+  <Frame name="RaidMakerCEInfoFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent" frameStrata="DIALOG">
+    <Size>
+      <AbsDimension x="340" y="390"/>
+    </Size>
+    <Anchors>
+      <Anchor point="CENTER">
+        <Offset>
+          <AbsDimension x="200" y="0"/>
+        </Offset>
+      </Anchor>
+    </Anchors>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="RaidMakerCEInfoFrameTitle" inherits="GameFontNormal" text="RaidMakerCE - Help">
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="-16"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="RaidMakerCEInfoFrameText" inherits="GameFontNormalSmall" justifyH="LEFT" justifyV="TOP">
+          <Size>
+            <AbsDimension x="300" y="330"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset>
+                <AbsDimension x="20" y="-36"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+          <Color r="1" g="1" b="1"/>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="RaidMakerCEInfoFrameCloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnMouseDown>
+        if arg1 == "LeftButton" then
+          this:StartMoving();
+        end
+      </OnMouseDown>
+      <OnMouseUp>
+        this:StopMovingOrSizing();
+      </OnMouseUp>
+      <OnShow>
+        RaidMakerCEUI_SetInfoText();
+      </OnShow>
+    </Scripts>
+  </Frame>
+
+</Ui>
