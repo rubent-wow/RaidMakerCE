@@ -2,7 +2,7 @@
 ## Title: RaidMakerCE
 ## Notes: Raid invitation manager using raid-helper.xyz sign-up data
 ## Author: Rubent
-## Version: 1.0.2
+## Version: 1.0.3
 ## SavedVariables: RaidMakerCEDB
 
 RaidMakerCEJSON.lua

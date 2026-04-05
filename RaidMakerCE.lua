@@ -19,6 +19,7 @@ RaidMakerCE = {
     lastInviteTime = 0,
     settings = {
         postJoinClassCheck = false,
+        triggerWords = "+, inv, invite",
     },
 }
 
@@ -79,6 +80,36 @@ local function GetGuildMemberClass(playerName)
         end
     end
     return nil
+end
+
+-- Check if a message matches any trigger word
+local function MatchesTriggerWord(message)
+    local msgLower = strlower(message)
+    local triggerStr = RaidMakerCE.settings.triggerWords or "+, inv, invite"
+    -- Split on commas
+    local start = 1
+    while true do
+        local pos = string.find(triggerStr, ",", start, true)
+        local word
+        if pos then
+            word = string.sub(triggerStr, start, pos - 1)
+            start = pos + 1
+        else
+            word = string.sub(triggerStr, start)
+        end
+        -- Trim whitespace
+        word = string.gsub(word, "^%s+", "")
+        word = string.gsub(word, "%s+$", "")
+        word = strlower(word)
+        if word ~= "" then
+            -- Check if message starts with this trigger word
+            if string.sub(msgLower, 1, string.len(word)) == word then
+                return true
+            end
+        end
+        if not pos then break end
+    end
+    return false
 end
 
 -- Simple table sort by position field
@@ -207,6 +238,7 @@ function RaidMakerCE_RestoreState()
     RaidMakerCE.isCustom = RaidMakerCEDB.isCustom or false
     if RaidMakerCEDB.settings then
         RaidMakerCE.settings.postJoinClassCheck = RaidMakerCEDB.settings.postJoinClassCheck or false
+        RaidMakerCE.settings.triggerWords = RaidMakerCEDB.settings.triggerWords or "+, inv, invite"
     end
     RaidMakerCE.invited = RaidMakerCEDB.invited or {}
     RaidMakerCE.inRaid = RaidMakerCEDB.inRaid or {}
@@ -387,7 +419,7 @@ end
 
 function RaidMakerCE_OnGuildChat(message, sender)
     if RaidMakerCE.state ~= "inviting" and RaidMakerCE.state ~= "open" then return end
-    if not string.find(message, "^%+") then return end
+    if not MatchesTriggerWord(message) then return end
 
     local senderLower = strlower(sender)
     local index = RaidMakerCE.nameLookup[senderLower]

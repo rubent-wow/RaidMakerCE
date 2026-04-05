@@ -202,6 +202,7 @@ end
 
 function RaidMakerCEUI_RefreshSettings()
     RaidMakerCEPostJoinCheckButton:SetChecked(RaidMakerCE.settings.postJoinClassCheck)
+    RaidMakerCETriggerWordsEditBox:SetText(RaidMakerCE.settings.triggerWords or "+, inv, invite")
 end
 
 function RaidMakerCEUI_SetInfoText()

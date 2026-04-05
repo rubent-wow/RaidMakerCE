@@ -887,7 +887,7 @@
   <!-- Settings frame -->
   <Frame name="RaidMakerCESettingsFrame" toplevel="true" movable="true" enableMouse="true" hidden="true" parent="UIParent" frameStrata="DIALOG">
     <Size>
-      <AbsDimension x="300" y="120"/>
+      <AbsDimension x="300" y="180"/>
     </Size>
     <Anchors>
       <Anchor point="CENTER">
@@ -979,6 +979,66 @@
           </Layer>
         </Layers>
       </Frame>
+      <!-- Trigger words -->
+      <Frame>
+        <Size>
+          <AbsDimension x="260" y="16"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="18" y="-100"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" text="Trigger words (comma-separated):" justifyH="LEFT">
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
+      <EditBox name="RaidMakerCETriggerWordsEditBox" autoFocus="false" enableMouse="true">
+        <Size>
+          <AbsDimension x="260" y="20"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="18" y="-116"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\ChatFrame\ChatFrameBackground" edgeFile="Interface\ChatFrame\ChatFrameBackground" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="0" right="0" top="0" bottom="0"/>
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="1"/>
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="1"/>
+          </EdgeSize>
+        </Backdrop>
+        <FontString inherits="ChatFontNormal"/>
+        <Scripts>
+          <OnEnterPressed>
+            this:ClearFocus();
+            RaidMakerCE.settings.triggerWords = this:GetText();
+            RaidMakerCE_SaveState();
+          </OnEnterPressed>
+          <OnEscapePressed>
+            this:ClearFocus();
+          </OnEscapePressed>
+          <OnEditFocusLost>
+            RaidMakerCE.settings.triggerWords = this:GetText();
+            RaidMakerCE_SaveState();
+          </OnEditFocusLost>
+        </Scripts>
+      </EditBox>
     </Frames>
     <Scripts>
       <OnMouseDown>
